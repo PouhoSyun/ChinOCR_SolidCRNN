@@ -41,8 +41,10 @@ def dump_pth(t, dir, name, i_bits, f_bits):
                 f.flush()
             f.close()
 
-def dump_img(config, path, name, i_bits, f_bits):
-    img = cv2.imread(path)
+def dump_img(config, args, name):
+    i_bits = args.i_bits
+    f_bits = args.f_bits
+    img = cv2.imread(args.image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     h, w = img.shape
     img = cv2.resize(img, (0, 0), fx=config.MODEL.IMAGE_SIZE.H / h, fy=config.MODEL.IMAGE_SIZE.H / h, interpolation=cv2.INTER_CUBIC)
@@ -125,10 +127,10 @@ def dump(config, args):
                   'rnn.1.rnn.bias_ih_l0_reverse',
                   'rnn.1.embedding.weight',
                   'rnn.1.embedding.bias']
-    # for layer in layer_name:
-    #     dump_pth(checkpoint, dirname + '/', layer, 10, 13)
+    for layer in layer_name:
+        dump_pth(checkpoint, dirname + '/', layer, args.i_bits, args.f_bits)
 
-    return dump_img(config, args.image_path, 'cnn_conv0', 10, 13)
+    return dump_img(config, args, 'cnn_conv0')
 
 if __name__ == '__main__':
     pass

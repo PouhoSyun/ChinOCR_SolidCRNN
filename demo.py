@@ -12,10 +12,12 @@ import argparse
 import dump
 from subprocess import run, Popen
 import os
- 
+
 def parse_arg():
     parser = argparse.ArgumentParser(description="demo")
 
+    parser.add_argument('--i_bits', help='bits of integer part in fixed point number', type=int, default=10)
+    parser.add_argument('--f_bits', help='bits of fraction part in fixed point number', type=int, default=13)
     parser.add_argument('--cfg', help='experiment configuration filename', type=str, default='360CC_config.yaml')
     parser.add_argument('--image_path', type=str, default='images/18.png', help='the path to your image')
     parser.add_argument('--checkpoint', type=str, default='output/checkpoints/mixed_second_finetune_acc_97P7.pth',
@@ -79,7 +81,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, get tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb0")
-        img = toTensor.path_to_tensor(device, dump_path, 32, 160, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 32, 160, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.relu0(img)
@@ -95,7 +97,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb1")
-        img = toTensor.path_to_tensor(device, dump_path, 16, 80, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 16, 80, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.cnn.relu1(img)
@@ -111,7 +113,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb2")
-        img = toTensor.path_to_tensor(device, dump_path, 8, 40, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 8, 40, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.cnn.batchnorm2(img)
@@ -127,7 +129,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb3")
-        img = toTensor.path_to_tensor(device, dump_path, 8, 40, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 8, 40, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.cnn.relu3(img)
@@ -143,7 +145,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb4")
-        img = toTensor.path_to_tensor(device, dump_path, 4, 41, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 4, 41, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.cnn.batchnorm4(img)
@@ -159,7 +161,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb5")
-        img = toTensor.path_to_tensor(device, dump_path, 4, 41, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 4, 41, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.cnn.relu5(img)
@@ -189,7 +191,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb6")
-        img = toTensor.path_to_tensor(device, dump_path, 1, 41, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 1, 41, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.rnn._modules['0'].embedding(img)  # [T * b, nOut]
@@ -206,7 +208,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb7")
-        img = toTensor.path_to_tensor(device, dump_path, 1, 41, 10, 13)
+        img = toTensor.path_to_tensor(device, dump_path, 1, 41, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.rnn._modules['1'].embedding(img)  # [T * b, nOut]

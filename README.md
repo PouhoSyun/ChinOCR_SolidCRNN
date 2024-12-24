@@ -1,90 +1,38 @@
 # Characters Recognition Hardware Accelerator
 
-This is a Chinese characters recognition repository based on convolutional recurrent networks. With hardware accelerators designed for Conv2d and LSTM layers, this code include syntheticable verilog modules and testbenches, respectively.
+This is a Chinese characters recognition repository based on convolutional recurrent networks. With hardware accelerators designed for *Conv2d* and *LSTM* layers, this code include syntheticable verilog modules and testbenches, respectively.
 
-## Performance![alt text](image-1.png)
-![alt text](image.png)
-#### Recognize characters in pictures![alt text](image-2.png)
+## Performance
+![An Example for Chinese Characters OCR Task](example.png)
+![Executing Result for the Example](example_result.png)
+This CRNN Inference unit achieves an accuracy of up to **97.7%**.
 
-<p align='center'>
-<img src='images/demo.png' title='example' style='max-width:600px'></img>
-</p>
-<p align='center'>
-<img src='images/demo_2.jpg' title='example2' style='max-width:600px'></img>
-</p>
+## Environments
+1. Windows 10/11 64-bit
+2. Python 3.12.2 64-bit
+3. **PyTorch 2.2.2** with cuda 12.1 🔥
+4. yaml
+5. easydict
+6. Icarus Verilog + vvp + GTKWave for Hardware debugging
 
-## Dev Environments
-1. WIN 10 or Ubuntu 16.04
-2. **PyTorch 1.2.0 (may fix ctc loss)** with cuda 10.0 🔥
-3. yaml
-4. easydict
-5. tensorboardX
-
-### Data
-#### Synthetic Chinese String Dataset
+## Data
 1. Download the [dataset](https://pan.baidu.com/s/1ufYbnZAZ1q0AlK7yZ08cvQ)
 2. Edit **lib/config/360CC_config.yaml** DATA:ROOT to you image path
-
-```angular2html
-    DATASET:
-      ROOT: 'to/your/images/path'
-```
-
 3. Download the [labels](https://pan.baidu.com/s/1oOKFDt7t0Wg6ew2uZUN9xg) (password: eaqb)
 4. Put *char_std_5990.txt* in **lib/dataset/txt/**
 5. And put *train.txt* and *test.txt* in **lib/dataset/txt/**
-
-    eg. test.txt
-```
-    20456343_4045240981.jpg 89 201 241 178 19 94 19 22 26 656
-    20457281_3395886438.jpg 120 1061 2 376 78 249 272 272 120 1061
-    ...
-```
-#### Or your own data
-1. Edit **lib/config/OWN_config.yaml** DATA:ROOT to you image path
-```angular2html
-    DATASET:
-      ROOT: 'to/your/images/path'
-```
-2. And put your *train_own.txt* and *test_own.txt* in **lib/dataset/txt/**
-
-    eg. test_own.txt
-```
-    20456343_4045240981.jpg 你好啊！祖国！
-    20457281_3395886438.jpg 晚安啊！世界！
-    ...
-```
-**note**: fixed-length training is supported. yet you can modify dataloader to support random length training.   
-
-## Train
-```angular2html
-   [run] python train.py --cfg lib/config/360CC_config.yaml
-or [run] python train.py --cfg lib/config/OWN_config.yaml
-```
-```
-#### loss curve
-
-```angular2html
-   [run] cd output/360CC/crnn/xxxx-xx-xx-xx-xx/
-   [run] tensorboard --logdir log
-```
-
-#### loss overview(first epoch)
-<center/>
-<img src='images/train_loss.png' title='loss1' style='max-width:800px'></img>
-</center>
-<p>
-<img src='images/tb_loss.png' title='loss1' style='max-width:600px'></img>
-</p>
+6. All pretrained model, reshaped image data for example, parameters in (https://disk.pku.edu.cn/link/AABB34C524BE09437CA4C1E9765DC7A662)
+7. Your own data (images with Chinese Characters for OCR) in **images/**
 
 ## Demo
-```angular2html
-   [run] python demo.py --image_path images/test.png --checkpoint output/checkpoints/mixed_second_finetune_acc_97P7.pth
+*How to use?*
 ```
-## References
-- https://github.com/meijieru/crnn.pytorch
-- https://github.com/HRNet
+[run] python demo.py --image_path path_of_your_image.png --checkpoint output/checkpoints/mixed_second_finetune_acc_97P7.pth --i_bits 10 --f_bits 13
+```
+*Options for execution*
 
-
-
-
+[image_path]path of your imageparser.add_argument<br />
+[i_bits]bits of integer part in fixed point number<br />
+[f_bits]bits of fraction part in fixed point number<br />
+[cfg]experiment configuration filename<br />
+[checkpoint]the path to your checkpoints
