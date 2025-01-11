@@ -70,7 +70,9 @@ if __name__ == '__main__':
 
     model.eval()
     # ////////////////////////////////////////////////////////////////
-    debug = [0, 1, 1, 1, 1, 1, 1, 1]
+    debug = [0, 1, 1, 1, 1, 1, 0, 1]
+    # 0(run_verilog) 1(get_tensor) for each layer
+    # debug = [cr0, cr1, cr2, cr3, cr4, cr5, ls0, ls1]
     # ////////////////////////////////////////////////////////////////
 
     # conv_relu0
@@ -190,7 +192,7 @@ if __name__ == '__main__':
         img = refer
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
-        dump_path = run_verilog("accelerator_tb6")
+        dump_path = run_verilog("lstmtb")
         img = toTensor.path_to_tensor(device, dump_path, 1, 41, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))

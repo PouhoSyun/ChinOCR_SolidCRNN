@@ -8,28 +8,31 @@ import lib.utils.toTensor as toTensor
 def dump_pth(t, dir, name, i_bits, f_bits):
     print("dumping paras #{} to txt file".format(name))
     arr = np.array(t[name].detach().cpu().numpy())
-    typ = name.split('.')[0]
+    typ = name.split('.')
     shape = arr.shape
-    split = (typ == 'rnn')
+    split = (typ[0] == 'rnn' and typ[2] != 'embedding')
     print("type of para is {}, with size of {}".format(typ, arr.shape))
 
-    split_list = ['ii', 'if', 'ig', 'io']
+    split_list_i = ['ii', 'if', 'ig', 'io']
+    split_list_h = ['hi', 'hf', 'hg', 'ho']
     if split:
         spvars = name.replace('.', '_').split('_')
         name = '_'.join([spvars[0], spvars[1], spvars[3]]) + '_'
+        if spvars[-1] == 'reverse':
+            name = name + 'rev'
+        split_list = split_list_i if spvars[4] == 'ih' else split_list_h
         for i, spname in enumerate(split_list):
             f = open(dir + name + spname + '.txt', 'w', encoding='utf-8')
             height = arr.shape[0] // 4
-            tmp = arr[height*i: height*(i+1)].flatten()
-            for item in tmp:
-                f.write(toTensor.to_fixed(item, i_bits, f_bits) + '\n')
-                f.flush()
+            item = ''.join([toTensor.to_fixed(i, i_bits, f_bits) for i in arr[height*i: height*(i+1)].flatten()[::-1]])
+            f.write(item + '\n')
+            f.flush()
             f.close()
     else:
         if len(shape) == 4:
             f = open(dir + name.replace('.', '_') + '.txt', 'w', encoding='utf-8')
             for o_c in arr:
-                item = ''.join([toTensor.to_fixed(i) for i in o_c.flatten()[::-1]])
+                item = ''.join([toTensor.to_fixed(i, i_bits, f_bits) for i in o_c.flatten()[::-1]])
                 f.write(item + '\n')
                 f.flush()
             f.close()
@@ -81,54 +84,55 @@ def dump(config, args):
     if not os.path.exists(dirname):
         os.mkdir(dirname)
     
-    layer_name = ['cnn.conv0.weight',
-                  'cnn.conv0.bias',
-                  'cnn.conv1.weight',
-                  'cnn.conv1.bias',
-                  'cnn.conv2.weight',
-                  'cnn.conv2.bias',
-                  'cnn.conv3.weight',
-                  'cnn.conv3.bias',
-                  'cnn.conv4.weight',
-                  'cnn.conv4.bias',
-                  'cnn.conv5.weight',
-                  'cnn.conv5.bias',
-                  'cnn.conv6.weight',
-                  'cnn.conv6.bias',
-                  'cnn.batchnorm2.weight',
-                  'cnn.batchnorm2.bias',
-                  'cnn.batchnorm2.running_mean',
-                  'cnn.batchnorm2.running_var',
-                  'cnn.batchnorm4.weight',
-                  'cnn.batchnorm4.bias',
-                  'cnn.batchnorm4.running_mean',
-                  'cnn.batchnorm4.running_var',
-                  'cnn.batchnorm6.weight',
-                  'cnn.batchnorm6.bias',
-                  'cnn.batchnorm6.running_mean',
-                  'cnn.batchnorm6.running_var',
+    layer_name = [
+    #               'cnn.conv0.weight',
+    #               'cnn.conv0.bias',
+    #               'cnn.conv1.weight',
+    #               'cnn.conv1.bias',
+    #               'cnn.conv2.weight',
+    #               'cnn.conv2.bias',
+    #               'cnn.conv3.weight',
+    #               'cnn.conv3.bias',
+    #               'cnn.conv4.weight',
+    #               'cnn.conv4.bias',
+    #               'cnn.conv5.weight',
+    #               'cnn.conv5.bias',
+    #               'cnn.conv6.weight',
+    #               'cnn.conv6.bias',
+    #               'cnn.batchnorm2.weight',
+    #               'cnn.batchnorm2.bias',
+    #               'cnn.batchnorm2.running_mean',
+    #               'cnn.batchnorm2.running_var',
+    #               'cnn.batchnorm4.weight',
+    #               'cnn.batchnorm4.bias',
+    #               'cnn.batchnorm4.running_mean',
+    #               'cnn.batchnorm4.running_var',
+    #               'cnn.batchnorm6.weight',
+    #               'cnn.batchnorm6.bias',
+    #               'cnn.batchnorm6.running_mean',
+    #               'cnn.batchnorm6.running_var',
                   'rnn.0.rnn.weight_ih_l0',
                   'rnn.0.rnn.weight_hh_l0',
                   'rnn.0.rnn.weight_ih_l0_reverse',
-                  'rnn.0.rnn.weight_ih_l0_reverse',
+                  'rnn.0.rnn.weight_hh_l0_reverse',
                   'rnn.0.rnn.bias_ih_l0',
                   'rnn.0.rnn.bias_hh_l0',
                   'rnn.0.rnn.bias_ih_l0_reverse',
-                  'rnn.0.rnn.bias_ih_l0_reverse',
+                  'rnn.0.rnn.bias_hh_l0_reverse',
                   'rnn.0.embedding.weight',
                   'rnn.0.embedding.bias',
                   'rnn.1.rnn.weight_ih_l0',
                   'rnn.1.rnn.weight_hh_l0',
                   'rnn.1.rnn.weight_ih_l0_reverse',
-                  'rnn.1.rnn.weight_ih_l0_reverse',
+                  'rnn.1.rnn.weight_hh_l0_reverse',
                   'rnn.1.rnn.bias_ih_l0',
                   'rnn.1.rnn.bias_hh_l0',
                   'rnn.1.rnn.bias_ih_l0_reverse',
-                  'rnn.1.rnn.bias_ih_l0_reverse',
+                  'rnn.1.rnn.bias_hh_l0_reverse',
                   'rnn.1.embedding.weight',
                   'rnn.1.embedding.bias']
-    for layer in layer_name:
-        dump_pth(checkpoint, dirname + '/', layer, args.i_bits, args.f_bits)
+    # for layer in layer_name:
+    #     dump_pth(checkpoint, dirname + '/', layer, args.i_bits, args.f_bits)
 
     return dump_img(config, args, 'cnn_conv0')
 

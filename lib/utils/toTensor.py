@@ -36,7 +36,6 @@ def tensor_to_file(dump_path, tensor: torch.Tensor, i_bits=10, f_bits=13):
     img = tensor.detach().cpu().numpy()
     with open(dump_path, "w") as f:
         for channel in img[0]:
-            channel = [to_fixed(i) for i in channel.flatten()]
-            for item in channel:
-                f.write(item + '\n')
-                f.flush()
+            channel = [to_fixed(i, i_bits, f_bits) for i in channel.flatten()[::-1]]
+            f.write(''.join(channel))
+            f.flush()

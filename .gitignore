@@ -1,7 +1,9 @@
 /images
 /model_para
-/output/checkpoints/mixed_second_finetune_acc_97P7.pth
 /model_para_float
 /data_input
 wave.vcd
 /tb/test_tb.vvp
+/output
+__pycache__/dump.cpython-312.pyc
+lib/utils/__pycache__/toTensor.cpython-312.pyc
