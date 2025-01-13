@@ -36,3 +36,5 @@ This CRNN Inference unit achieves an accuracy of up to **97.7%**.
 [f_bits]bits of fraction part in fixed point number<br />
 [cfg]experiment configuration filename<br />
 [checkpoint]the path to your checkpoints
+
+By default, demo will run in high efficiency demo mode, it will not execute the hardware accelerator code but read our predumped files. If you want to run the code in full mode, please delete the corresponding output file in /tb/files and set the corresponding debug parameter in demo.py to 0.
