@@ -31,7 +31,10 @@ def path_to_tensor(device, dump_path, src_h, src_w, i_bits=10, f_bits=13, is_lst
             words = [to_float(channel[i:i+sec]) for i in range(0, len(channel), sec)][::-1]
             img.append(words)
         img = np.array(img).astype(np.float32)
-        img.reshape(1, c, src_h, src_w)
+        if is_lstm:
+            img = img.reshape(c, src_w)
+        else:
+            img = img.reshape(1, c, src_h, src_w)
         img = torch.from_numpy(img).to(device)
         return img
     

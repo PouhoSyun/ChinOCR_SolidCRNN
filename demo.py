@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     model.eval()
     # ////////////////////////////////////////////////////////////////
-    debug = [1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+    debug = [0, 1, 1, 1, 1, 1, 0, 1, 1, 1]
     # 0(run_verilog) 1(get_tensor) for each layer
     # debug = [cr0, cr1, cr2, cr3, cr4, cr5, ls0, ls0_rev, ls1, ls1_rev]
     # ////////////////////////////////////////////////////////////////
@@ -216,14 +216,25 @@ if __name__ == '__main__':
     refer, _ = model.rnn._modules['1'].rnn(img)
     T, b, h = refer.size()
     refer = refer.view(T * b, h)
-    if debug[7]:
-        img = refer
+    if debug[8]:
+        img_fwd = refer[:,:256]
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
-        dump_path = run_verilog("accelerator_tb7")
-        img = toTensor.path_to_tensor(device, dump_path, 1, 256, args.i_bits, args.f_bits)
-        print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        dump_path_fwd = run_verilog("lstm_1tb")
+        img_fwd = toTensor.path_to_tensor(device, dump_path_fwd, 1, 256, args.i_bits, args.f_bits, is_lstm=1)
+        print("Executing LSTM-forward completed")
+        print("MSE error is {}, continue to inference".format(consistency(refer[:,:256], img_fwd)))
+    if debug[9]:
+        img_rev = refer[:,256:]
+        print("Executing in 'debug' mode, getting tensor file from software results")
+    else:
+        img = img[::-1,:,:]
+        toTensor.tensor_to_file(dump_path, img)
+        dump_path_rev = run_verilog("lstm_1tb")
+        img_rev = toTensor.path_to_tensor(device, dump_path_rev, 1, 256, args.i_bits, args.f_bits, is_lstm=1)
+        print("Executing LSTM-reverse completed")
+        print("MSE error is {}, continue to inference".format(consistency(refer[:,:,256:], img_rev)))
+    img = torch.cat([img_fwd, img_rev], dim=1)
     img = model.rnn._modules['1'].embedding(img)  # [T * b, nOut]
     img = img.view(T, b, -1)
 
