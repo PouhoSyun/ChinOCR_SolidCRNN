@@ -32,7 +32,6 @@ module top;
     // Outputs
     wire [M*DATA_WIDTH-1:0] c_t_out;
     wire [M*DATA_WIDTH-1:0] h_t_out;
-    reg ini;
     reg clk;
 
     // Instantiate the lstm module
@@ -67,8 +66,8 @@ module top;
     );
 
     integer i, j;
-    assign htI = (ini == 0) ? {M*DATA_WIDTH{1'b0}} : h_t_out;
-    assign ctI = (ini == 0) ? {M*DATA_WIDTH{1'b0}} : c_t_out;
+    assign htI = h_t_out;
+    assign ctI = c_t_out;
 
     initial begin
         $dumpfile("wave.vcd");
@@ -76,25 +75,26 @@ module top;
     end
     initial begin
         clk = 0;
+        #5
         forever #5 clk = ~clk;  // 10单位时间一个时钟周期
     end
     
     //输入xt 
     integer r5;
     integer xt_file;
+    integer ii;
     initial begin
-        clk = 1;
-        ini = 0;
-        xt = 0;
-        #100;
-        ini = 1;
         xt_file = $fopen("data_input/rnn_lstm0.txt","r");
-        for(i=0;i<totalcal;i=i+1) begin
+        for(ii=0;ii<totalcal;ii=ii+1) begin
             r5 = $fscanf(xt_file,"%b\n",xt);
             #10;
+            if(ii>0) begin
+                $fdisplay(op_file1,"%b",c_t_out);
+                $fdisplay(op_file2,"%b",h_t_out);
+            end
         end
         #5
-        //$fdisplay(op_file1,"%b",c_t_out); 
+        $fdisplay(op_file1,"%b",c_t_out); 
         $fdisplay(op_file2,"%b",h_t_out); 
         #1000;
         $finish;
@@ -102,11 +102,11 @@ module top;
     integer ct_output,ht_output;
     integer op_file1,op_file2;
     initial begin
-        // op_file1 = $fopen("tb/files/ct_output.txt", "w");
-        // if (op_file1 == 0) begin
-        //         $display("Error: Unable to open file for index %0d", i);
-        //         $finish;
-        // end
+        op_file1 = $fopen("tb/files/lstmtb_ct.txt", "w");
+        if (op_file1 == 0) begin
+                $display("Error: Unable to open file for index %0d", i);
+                $finish;
+        end
         op_file2 = $fopen("tb/files/lstmtb.txt", "w");
         if (op_file2 == 0) begin
                 $display("Error: Unable to open file for index %0d", i);

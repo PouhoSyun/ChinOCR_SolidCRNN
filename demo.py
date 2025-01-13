@@ -70,9 +70,9 @@ if __name__ == '__main__':
 
     model.eval()
     # ////////////////////////////////////////////////////////////////
-    debug = [0, 1, 1, 1, 1, 1, 0, 1]
+    debug = [1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
     # 0(run_verilog) 1(get_tensor) for each layer
-    # debug = [cr0, cr1, cr2, cr3, cr4, cr5, ls0, ls1]
+    # debug = [cr0, cr1, cr2, cr3, cr4, cr5, ls0, ls0_rev, ls1, ls1_rev]
     # ////////////////////////////////////////////////////////////////
 
     # conv_relu0
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         dump_path = run_verilog("accelerator_tb1")
         img = toTensor.path_to_tensor(device, dump_path, 16, 80, args.i_bits, args.f_bits)
         print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.relu1(img)
     img = model.cnn.pooling1(img)
     dump_path = "data_input/cnn_conv2.txt"
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         dump_path = run_verilog("accelerator_tb2")
         img = toTensor.path_to_tensor(device, dump_path, 8, 40, args.i_bits, args.f_bits)
         print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.batchnorm2(img)
     img = model.cnn.relu2(img)
     dump_path = "data_input/cnn_conv3.txt"
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         dump_path = run_verilog("accelerator_tb3")
         img = toTensor.path_to_tensor(device, dump_path, 8, 40, args.i_bits, args.f_bits)
         print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.relu3(img)
     img = model.cnn.pooling2(img)
     dump_path = "data_input/cnn_conv4.txt"
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         dump_path = run_verilog("accelerator_tb4")
         img = toTensor.path_to_tensor(device, dump_path, 4, 41, args.i_bits, args.f_bits)
         print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.batchnorm4(img)
     img = model.cnn.relu4(img)
     dump_path = "data_input/cnn_conv5.txt"
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         dump_path = run_verilog("accelerator_tb5")
         img = toTensor.path_to_tensor(device, dump_path, 4, 41, args.i_bits, args.f_bits)
         print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        print("MSE error is {}, continue to inference".format(consistency(refer, img)))
     img = model.cnn.relu5(img)
     img = model.cnn.pooling3(img)
 
@@ -189,13 +189,24 @@ if __name__ == '__main__':
     T, b, h = refer.size()
     refer = refer.view(T * b, h)
     if debug[6]:
-        img = refer
+        img_fwd = refer[:,:256]
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
-        dump_path = run_verilog("lstmtb")
-        img = toTensor.path_to_tensor(device, dump_path, 1, 41, args.i_bits, args.f_bits)
-        print("Executing completed")
-        print("MSE error is {}, continue to inference",consistency(refer, img))
+        dump_path_fwd = run_verilog("lstmtb")
+        img_fwd = toTensor.path_to_tensor(device, dump_path_fwd, 1, 256, args.i_bits, args.f_bits, is_lstm=1)
+        print("Executing LSTM-forward completed")
+        print("MSE error is {}, continue to inference".format(consistency(refer[:,:256], img_fwd)))
+    if debug[7]:
+        img_rev = refer[:,256:]
+        print("Executing in 'debug' mode, getting tensor file from software results")
+    else:
+        img = img[::-1,:,:]
+        toTensor.tensor_to_file(dump_path, img)
+        dump_path_rev = run_verilog("lstmtb")
+        img_rev = toTensor.path_to_tensor(device, dump_path_rev, 1, 256, args.i_bits, args.f_bits, is_lstm=1)
+        print("Executing LSTM-reverse completed")
+        print("MSE error is {}, continue to inference".format(consistency(refer[:,:,256:], img_rev)))
+    img = torch.cat([img_fwd, img_rev], dim=1)
     img = model.rnn._modules['0'].embedding(img)  # [T * b, nOut]
     img = img.view(T, b, -1)
     dump_path = "data_input/rnn_lstm1.txt"
@@ -210,7 +221,7 @@ if __name__ == '__main__':
         print("Executing in 'debug' mode, getting tensor file from software results")
     else:
         dump_path = run_verilog("accelerator_tb7")
-        img = toTensor.path_to_tensor(device, dump_path, 1, 41, args.i_bits, args.f_bits)
+        img = toTensor.path_to_tensor(device, dump_path, 1, 256, args.i_bits, args.f_bits)
         print("Executing completed")
         print("MSE error is {}, continue to inference",consistency(refer, img))
     img = model.rnn._modules['1'].embedding(img)  # [T * b, nOut]

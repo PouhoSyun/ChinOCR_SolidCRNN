@@ -151,6 +151,11 @@ module lstm #(
     matrix_odoter #(.H(M),.W('b1),.DATA_WIDTH(DATA_WIDTH), .FRACT_WIDTH(FRACT_WIDTH) ) odot3(
         .a(ot),.b(tempm11),.y(htO));  
 
+    initial begin
+        c_t_out <= 0;
+        h_t_out <= 0;
+    end
+
     always @(posedge clk) begin
         c_t_out <= ctO;
 		h_t_out <= htO;
